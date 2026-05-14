@@ -84,7 +84,7 @@ def main():
     )
     parser.add_argument(
         "--config",
-        default="openarm_cell.yaml",
+        default=None,
         help="The configuration file for this OpenArm",
         type=pathlib.Path,
     )
