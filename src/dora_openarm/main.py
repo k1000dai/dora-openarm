@@ -16,12 +16,19 @@
 
 import argparse
 import dataclasses
+import enum
 import dora
 import openarm_driver
 import os
 import pathlib
 import pyarrow as pa
 import numpy as np
+
+
+class ArmStatus(str, enum.Enum):
+    STOPPED = "stopped"
+    STARTED = "started"
+    ALIGNED = "aligned"
 
 
 @dataclasses.dataclass
@@ -56,7 +63,6 @@ def _align(arm, state, new_position, name, threshold, trigger=None):
     # If OpenArm is already aligned, we do nothing.
     if is_aligned(new_position, current_position()):
         return True
-
     diff = new_position - state.align_target
     step_move = np.clip(diff, -state.step_limit, state.step_limit)
     state.align_target += step_move
@@ -118,20 +124,30 @@ def main():
     config = openarm_driver.Config(args.config)
     arm = openarm_driver.SingleArmDriver(name, config)
     arm.start()
-
-    initialized = False
+    status = ArmStatus.STARTED
+    align_threshold = args.align_threshold
     align_state = AlignState()
+    node.send_output("status", pa.array([ArmStatus.STARTED]))
     for event in node:
         if event["type"] != "INPUT":
             continue
 
-        # Main process
         event_id = event["id"]
-        if event_id == "request_position":
+        if event_id == "command":
+            command = event["value"][0].as_py()
+            if command == "start":
+                arm = openarm_driver.SingleArmDriver(name, config)
+                arm.start()
+                status = ArmStatus.STARTED
+                node.send_output("status", pa.array([ArmStatus.STARTED]))
+            elif command == "stop":
+                arm.stop()
+                status = ArmStatus.STOPPED
+                node.send_output("status", pa.array([ArmStatus.STOPPED]))
+        elif event_id == "request_position":
             current_position = arm.fetch_position(
                 refresh=args.refresh_every_request,
             )
-
             node.send_output(
                 "position",
                 pa.array(current_position, type=pa.float32()),
@@ -150,6 +166,8 @@ def main():
                 ),
             )
         elif event_id == "move_position":
+            if status is ArmStatus.STOPPED:
+                continue
             value = event["value"]
             if isinstance(value, pa.StructArray):
                 new_position = value.field("new_position")
@@ -158,19 +176,34 @@ def main():
             else:
                 new_position = value
                 # other_arm_position = None
-            if not initialized:
-                initialized = _align(
+
+            if status is ArmStatus.ALIGNED:
+                diverged = np.any(
+                    np.abs(
+                        np.asarray(new_position, dtype=np.float32)[:-1]
+                        - arm.last_command[:-1]
+                    )
+                    > align_threshold
+                )
+                if diverged:
+                    status = ArmStatus.STARTED
+                    align_state = AlignState()
+                    node.send_output("status", pa.array([ArmStatus.STARTED]))
+                else:
+                    arm.send_position(new_position)
+
+            if status is ArmStatus.STARTED:
+                is_aligned = _align(
                     arm,
                     align_state,
                     new_position,
                     name,
-                    args.align_threshold,
+                    align_threshold,
                     trigger=args.align_trigger,
                 )
-                if initialized:
-                    node.send_output("status", pa.array(["ready"]))
-                continue
-            arm.send_position(new_position)
+                if is_aligned:
+                    status = ArmStatus.ALIGNED
+                    node.send_output("status", pa.array([ArmStatus.ALIGNED]))
     if args.stop:
         arm.stop()
     else:
