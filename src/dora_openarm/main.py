@@ -26,6 +26,8 @@ import numpy as np
 
 
 class ArmStatus(str, enum.Enum):
+    """Arm control states."""
+
     STOPPED = "stopped"
     STARTED = "started"
     ALIGNED = "aligned"
