@@ -123,6 +123,8 @@ def main():
     args = parser.parse_args()
     node = dora.Node()
     name = f"{args.side}_arm"
+    status = ArmStatus.STOPPED
+    node.send_output("status", pa.array([ArmStatus.STOPPED]))
     config = openarm_driver.Config(args.config)
     arm = openarm_driver.SingleArmDriver(name, config)
     arm.start()
@@ -143,9 +145,9 @@ def main():
                 status = ArmStatus.STARTED
                 node.send_output("status", pa.array([ArmStatus.STARTED]))
             elif command == "stop":
-                arm.stop()
                 status = ArmStatus.STOPPED
                 node.send_output("status", pa.array([ArmStatus.STOPPED]))
+                arm.stop()
         elif event_id == "request_position":
             current_position = arm.fetch_position(
                 refresh=args.refresh_every_request,
