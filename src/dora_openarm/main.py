@@ -142,6 +142,7 @@ def main():
             if command == "start":
                 arm = openarm_driver.SingleArmDriver(name, config)
                 arm.start()
+                align_state = AlignState()
                 status = ArmStatus.STARTED
                 node.send_output("status", pa.array([ArmStatus.STARTED]))
             elif command == "stop":
