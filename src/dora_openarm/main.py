@@ -123,13 +123,15 @@ def main():
     args = parser.parse_args()
     node = dora.Node()
     name = f"{args.side}_arm"
+    status = ArmStatus.STOPPED
+    node.send_output("status", pa.array([ArmStatus.STOPPED]))
     config = openarm_driver.Config(args.config)
-    arm = openarm_driver.SingleArmDriver(name, config)
-    arm.start()
-    status = ArmStatus.STARTED
-    align_threshold = args.align_threshold
-    align_state = AlignState()
-    node.send_output("status", pa.array([ArmStatus.STARTED]))
+    #arm = openarm_driver.SingleArmDriver(name, config)
+    #arm.start()
+    #status = ArmStatus.STARTED
+    #align_threshold = args.align_threshold
+    #align_state = AlignState()
+    #node.send_output("status", pa.array([ArmStatus.STARTED]))
     for event in node:
         if event["type"] != "INPUT":
             continue
