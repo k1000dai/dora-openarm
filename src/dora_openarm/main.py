@@ -139,7 +139,6 @@ def main():
         if event_id == "command":
             command = event["value"][0].as_py()
             if command == "start":
-                arm = openarm_driver.SingleArmDriver(name, config)
                 arm.start()
                 align_state = AlignState()
                 status = ArmStatus.STARTED
