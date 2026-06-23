@@ -43,8 +43,7 @@ class AlignState:
 
 def _align(arm, state, new_position, name, threshold, trigger=None):
     """Safety: Align OpenArm with the position."""
-    if trigger == "gripper":
-        # Check if gripper is active (threshold ~ -10 deg)
+    if trigger == "gripper":  # Check if gripper is active (threshold ~ -10 deg)
         gripper_position = new_position[-1]  # Last value is gripper's position
         if name == "right_arm":
             is_gripping = gripper_position.as_py() > np.deg2rad(-5)
@@ -126,12 +125,12 @@ def main():
     status = ArmStatus.STOPPED
     node.send_output("status", pa.array([ArmStatus.STOPPED]))
     config = openarm_driver.Config(args.config)
-    #arm = openarm_driver.SingleArmDriver(name, config)
-    #arm.start()
-    #status = ArmStatus.STARTED
-    #align_threshold = args.align_threshold
-    #align_state = AlignState()
-    #node.send_output("status", pa.array([ArmStatus.STARTED]))
+    align_threshold = args.align_threshold
+    # arm = openarm_driver.SingleArmDriver(name, config)
+    # arm.start()
+    # status = ArmStatus.STARTED
+    # align_state = AlignState()
+    # node.send_output("status", pa.array([ArmStatus.STARTED]))
     for event in node:
         if event["type"] != "INPUT":
             continue
