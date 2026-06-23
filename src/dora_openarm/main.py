@@ -127,10 +127,6 @@ def main():
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
     arm = openarm_driver.SingleArmDriver(name, config)
-    # arm.start()
-    # status = ArmStatus.STARTED
-    # align_state = AlignState()
-    # node.send_output("status", pa.array([ArmStatus.STARTED]))
     for event in node:
         if event["type"] != "INPUT":
             continue
