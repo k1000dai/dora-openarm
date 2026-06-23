@@ -126,7 +126,7 @@ def main():
     node.send_output("status", pa.array([ArmStatus.STOPPED]))
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
-    # arm = openarm_driver.SingleArmDriver(name, config)
+    arm = openarm_driver.SingleArmDriver(name, config)
     # arm.start()
     # status = ArmStatus.STARTED
     # align_state = AlignState()
