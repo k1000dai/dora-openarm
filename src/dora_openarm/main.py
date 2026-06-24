@@ -119,14 +119,26 @@ def main():
         default=_env_flag("REFRESH", True),
         help="Refresh OpenArm on every request to make it more accurate.",
     )
+    parser.add_argument(
+        "--start-on-startup",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Start the arm on startup.",
+    )
     args = parser.parse_args()
     node = dora.Node()
     name = f"{args.side}_arm"
-    status = ArmStatus.STOPPED
-    node.send_output("status", pa.array([ArmStatus.STOPPED]))
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
     arm = openarm_driver.SingleArmDriver(name, config)
+    if args.start_on_startup:
+        arm.start()
+        align_state = AlignState()
+        status = ArmStatus.STARTED
+        node.send_output("status", pa.array([ArmStatus.STARTED]))
+    else:
+        status = ArmStatus.STOPPED
+        node.send_output("status", pa.array([ArmStatus.STOPPED]))
     for event in node:
         if event["type"] != "INPUT":
             continue
