@@ -120,7 +120,7 @@ def main():
         help="Refresh OpenArm on every request to make it more accurate.",
     )
     parser.add_argument(
-        "--initial-start",
+        "--start-on-startup",
         action=argparse.BooleanOptionalAction,
         default=False,
         help="Start the arm on startup.",
@@ -131,7 +131,7 @@ def main():
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
     arm = openarm_driver.SingleArmDriver(name, config)
-    if args.initial_start:
+    if args.start_on_startup:
         arm.start()
         align_state = AlignState()
         status = ArmStatus.STARTED
