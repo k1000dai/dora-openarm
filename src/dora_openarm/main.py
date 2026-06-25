@@ -23,7 +23,7 @@ import os
 import pathlib
 import pyarrow as pa
 import numpy as np
-
+import time
 
 class ArmStatus(str, enum.Enum):
     """Arm control states."""
@@ -148,14 +148,16 @@ def main():
             command = event["value"][0].as_py()
             if command == "start":
                 arm.start()
+                time.sleep(0.5)  # Wait for the arm to start
                 align_state = AlignState()
                 status = ArmStatus.STARTED
-                node.send_output("status", pa.array([ArmStatus.STARTED]))
             elif command == "stop":
                 status = ArmStatus.STOPPED
                 node.send_output("status", pa.array([ArmStatus.STOPPED]))
                 arm.stop()
         elif event_id == "request_position":
+            if status is ArmStatus.STOPPED:
+                continue
             current_position = arm.fetch_position(
                 refresh=args.refresh_every_request,
             )
@@ -164,6 +166,8 @@ def main():
                 pa.array(current_position, type=pa.float32()),
             )
         elif event_id == "request_state":
+            if status is ArmStatus.STOPPED:
+                continue
             state = arm.fetch_state(refresh=args.refresh_every_request)
             node.send_output(
                 "state",
