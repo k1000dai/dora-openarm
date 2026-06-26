@@ -148,7 +148,7 @@ def main():
             command = event["value"][0].as_py()
             if command == "start":
                 arm.start()
-                time.sleep(0.5)  # Wait for the arm to start
+                time.sleep(1)  # Wait for the arm to start
                 align_state = AlignState()
                 status = ArmStatus.STARTED
             elif command == "stop":
