@@ -157,6 +157,7 @@ def main():
                 arm.stop()
         elif event_id == "request_position":
             if status is ArmStatus.STOPPED:
+                print("Arm is stopped, cannot fetch position.")
                 continue
             current_position = arm.fetch_position(
                 refresh=args.refresh_every_request,
@@ -167,6 +168,7 @@ def main():
             )
         elif event_id == "request_state":
             if status is ArmStatus.STOPPED:
+                print("Arm is stopped, cannot fetch state.")
                 continue
             state = arm.fetch_state(refresh=args.refresh_every_request)
             node.send_output(
