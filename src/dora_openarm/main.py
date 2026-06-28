@@ -130,6 +130,7 @@ def main():
     name = f"{args.side}_arm"
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
+    arm = None
     if args.start_on_startup:
         arm = openarm_driver.SingleArmDriver(name, config)
         arm.start()
@@ -147,6 +148,8 @@ def main():
         if event_id == "command":
             command = event["value"][0].as_py()
             if command == "start":
+                if arm is not None:
+                    arm.stop()  # Stop the existing session before replacing it
                 arm = openarm_driver.SingleArmDriver(
                     name, config
                 )  # Re-initialize the arm to ensure a fresh start
@@ -157,8 +160,9 @@ def main():
             elif command == "stop":
                 status = ArmStatus.STOPPED
                 node.send_output("status", pa.array([ArmStatus.STOPPED]))
-                arm.stop()
-                del arm  # Remove the arm instance to free resources
+                if arm is not None:
+                    arm.stop()
+                    arm = None  # Drop the instance to free resources
         elif event_id == "request_position":
             if status is ArmStatus.STOPPED:
                 continue
@@ -225,10 +229,11 @@ def main():
                 if is_aligned:
                     status = ArmStatus.ALIGNED
                     node.send_output("status", pa.array([ArmStatus.ALIGNED]))
-    if args.stop:
-        arm.stop()
-    else:
-        arm.on_start()
+    if arm is not None:
+        if args.stop:
+            arm.stop()
+        else:
+            arm.on_start()
 
 
 if __name__ == "__main__":
