@@ -147,6 +147,7 @@ def main():
         if event_id == "command":
             command = event["value"][0].as_py()
             if command == "start":
+                arm = openarm_driver.SingleArmDriver(name, config) # Re-initialize the arm to ensure a fresh start
                 arm.start()
                 time.sleep(1)  # Wait for the arm to start
                 align_state = AlignState()
