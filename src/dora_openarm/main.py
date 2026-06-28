@@ -149,7 +149,6 @@ def main():
             if command == "start":
                 arm = openarm_driver.SingleArmDriver(name, config) # Re-initialize the arm to ensure a fresh start
                 arm.start()
-                time.sleep(1)  # Wait for the arm to start
                 align_state = AlignState()
                 status = ArmStatus.STARTED
                 node.send_output("status", pa.array([ArmStatus.STARTED]))
