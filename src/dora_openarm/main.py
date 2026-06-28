@@ -23,7 +23,7 @@ import os
 import pathlib
 import pyarrow as pa
 import numpy as np
-import time
+
 
 class ArmStatus(str, enum.Enum):
     """Arm control states."""
@@ -147,7 +147,9 @@ def main():
         if event_id == "command":
             command = event["value"][0].as_py()
             if command == "start":
-                arm = openarm_driver.SingleArmDriver(name, config) # Re-initialize the arm to ensure a fresh start
+                arm = openarm_driver.SingleArmDriver(
+                    name, config
+                )  # Re-initialize the arm to ensure a fresh start
                 arm.start()
                 align_state = AlignState()
                 status = ArmStatus.STARTED
