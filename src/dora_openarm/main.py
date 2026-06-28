@@ -130,8 +130,8 @@ def main():
     name = f"{args.side}_arm"
     config = openarm_driver.Config(args.config)
     align_threshold = args.align_threshold
-    arm = openarm_driver.SingleArmDriver(name, config)
     if args.start_on_startup:
+        arm = openarm_driver.SingleArmDriver(name, config)
         arm.start()
         align_state = AlignState()
         status = ArmStatus.STARTED
@@ -157,6 +157,7 @@ def main():
                 status = ArmStatus.STOPPED
                 node.send_output("status", pa.array([ArmStatus.STOPPED]))
                 arm.stop()
+                del arm  # Remove the arm instance to free resources
         elif event_id == "request_position":
             if status is ArmStatus.STOPPED:
                 continue
